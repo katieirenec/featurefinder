@@ -2,7 +2,7 @@
 #
 # Developed on Python 2.7.3
 # By: Katie Cunningham
-# Last Updated: Feb 2, 2013
+# Last Updated: March 31, 2013
 
 
 from operator import attrgetter
@@ -80,14 +80,19 @@ def print_interval(i):
     print type(i), i.name, '\t', i.chrom, '(', i.left, ',', i.right, ')'
 
 
-def create_gene_list(gene_filename):
+def create_gene_list(gene_fp):
     """
     Creates and returns a sorted list of Genes from the file with the given
     filename.
 
     """
 
-    gene_fp = open(gene_filename, 'r')
+    newfile = False
+    # Try to read from gene_file. If we can't, assume it's something we can
+    # use to open a file.
+    if not hasattr(gene_fp, 'read'):
+        newfile = True
+        gene_fp = file(gene_fp, 'r')
 
     header = gene_fp.readline()
     if not header.startswith('#'):
@@ -137,21 +142,27 @@ def create_gene_list(gene_filename):
         # Add it to the end of the list
         genes.append(gene)
 
-    gene_fp.close()
+    # If we opened a new file, clean it up.
+    if newfile:
+        gene_fp.close()
 
     sort_intervals(genes)
 
     return genes
 
 
-def create_region_list(region_filename):
+def create_region_list(region_fp):
     """
     Creates and returns a sorted list of Regions from the file with the given
     filename
 
     """
-
-    region_fp = open(region_filename, 'r')
+    newfile = False
+    # Try to read from gene_file. If we can't, assume it's something we can
+    # use to open a file.
+    if not hasattr(region_fp, 'read'):
+        newfile = True
+        region_fp = open(region_fp, 'r')
 
     # Advance until line starting with "#" is read
     header = region_fp.readline()
@@ -185,7 +196,8 @@ def create_region_list(region_filename):
 
         regions.append(region)
 
-    region_fp.close()
+    if newfile:
+        region_fp.close()
 
     sort_intervals(regions)
 
@@ -210,7 +222,10 @@ def overlaps(feature, region):
 
 
 def before(feature, region):
-    """Returns True if the feature is before the region"""
+    """Returns True if the feature is completely before the region
+
+    If the end of the feature is before the beginning of the region,
+    returns True"""
 
     ###print 'In before...'
     ###print_comp(feature, region)
@@ -224,10 +239,13 @@ def before(feature, region):
 
 
 def after(feature, region):
-    """Returns True if the feature is before the region"""
+    """Returns True if the feature is completely after the region
+
+    If the beginning of the feature is after the end of the region,
+    returns True"""
 
     ###print 'In after...'
-    print_comp(feature, region)
+    ###print_comp(feature, region)
 
     if feature.chrom > region.chrom:
         return True
@@ -271,7 +289,9 @@ def print_overlap_info(feature, region):
                                                                feature))
 # This needs work!!!!! And testing!!!!!
 def find_features(region_list, gene_list=None):
-    """what should this return?"""
+    """Returns a list of the features found"""
+
+    found = []
 
     if gene_list is None:
 
@@ -285,12 +305,10 @@ def find_features(region_list, gene_list=None):
         print 'region: ', region.name
 
         while ((gene_index < len(gene_list)) and
-              before(gene_list[gene_index], region)):
-            gene_index += 1
-            print 'gene_index: ', gene_index
-
-        if gene_index < len(gene_list):
+              not after(gene_list[gene_index], region)):
+            print '--> gene_index: ', gene_index
             print_overlap_info(region, gene_list[gene_index])
+            gene_index += 1
 
 
 """
