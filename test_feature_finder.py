@@ -1,8 +1,6 @@
-
 import random
 import unittest
-#import StringIO
-
+import StringIO
 
 from feature_finder import *
 
@@ -14,7 +12,6 @@ class TestGeneList(unittest.TestCase):
     def setUp(self):
         GENE_FILENAME = 'gene_file'
         self.genes = create_gene_list(GENE_FILENAME)
-
 
     def test_sorted(self):
         """ Make sure that the lists of all types are aorted correctly"""
@@ -34,15 +31,14 @@ class TestGeneList(unittest.TestCase):
             self.assertEquals(int(gene.exonCount), len(gene.exons))
 
 
-class Testregion_list(unittest.TestCase):
+class TestRegionList(unittest.TestCase):
 
     def setUp(self):
         REGION_FILENAME = 'region_file'
         self.regions = create_region_list(REGION_FILENAME)
 
-
     def test_sorted(self):
-        """ Make sure that the lists of all types are aorted correctly"""
+        """ Make sure that the lists of all types are sorted correctly"""
 
         for region in self.regions:
 
@@ -109,7 +105,6 @@ class TestBeforeAndAfter(unittest.TestCase):
 
         # feature is after region
         self.assertFalse(before(f_ch7_50_70, r_100_200))
-
 
     def test_after(self):
         """Make sure the after function works"""
@@ -226,6 +221,7 @@ class TestOverlap(unittest.TestCase):
         self.assertFalse(overlaps(f_ch7_50_70, r_100_200))
 
     def test_get_overlap(self):
+        """tests how much two regions overlap"""
 
         # Same chr...
 
@@ -266,7 +262,7 @@ class TestOverlap(unittest.TestCase):
         self.assertEquals(71, get_overlap(f_100_170, r_100_200))
         self.assertEquals(51, get_overlap(f_150_200, r_100_200))
 
-        # different chrs
+        # different chrs ...
         f_ch1_500_700 = Feature('chr1', 500, 700, '')
         f_ch7_50_70 = Feature('chr7', 50, 70, '')
 
@@ -278,10 +274,10 @@ class TestOverlap(unittest.TestCase):
 
 
 class TestFindFeatures(unittest.TestCase):
-    """Make sure the overlaps and get_overlap functions work"""
+    """Make sure the right features are found"""
 
     def setUp(self):
-       pass
+       self.maxDiff = None
 
 
     def test_find_features_big_gene(self):
@@ -291,11 +287,10 @@ class TestFindFeatures(unittest.TestCase):
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
-        #-------=====================================================----------
+        #-------0====================================================----------
         #----------------------------------------------------------------------
-        #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Regions:
-        #-====------======----=====----=====----======----=====----=====---===-
+        #-0===------1=====----2====----3====----4=====----5====----6====---7==-
         # Overlap:
         #           ======    =====    =====    ======    =====    ==
 
@@ -316,14 +311,24 @@ chr1	50	54	R6	4.6	1	4.6	0.3	0.5	0.2
 chr1	59	63	R7	-4.1	1	-4.1	-0.2	0.2	0.5	
 chr1	67	69	R8	4.0	1	4.0	0.2	0.6	0.4	"""
 
-        import StringIO
         gene_fp = StringIO.StringIO(gene_file)
         gene_list = create_gene_list(gene_fp)
 
         region_fp = StringIO.StringIO(region_file)
         region_list = create_region_list(region_fp)
 
-        find_features(region_list, gene_list=gene_list)
+        true_found = {region_list[0]:[],
+                      region_list[1]:[gene_list[0]],
+                      region_list[2]:[gene_list[0]],
+                      region_list[3]:[gene_list[0]],
+                      region_list[4]:[gene_list[0]],
+                      region_list[5]:[gene_list[0]],
+                      region_list[6]:[gene_list[0]],
+                      region_list[7]:[]}
+
+        code_found = find_features(region_list, gene_list=gene_list)
+
+        self.assertEquals(code_found, true_found)
 
     def test_find_features_big_gene_neg(self):
 
@@ -334,10 +339,9 @@ chr1	67	69	R8	4.0	1	4.0	0.2	0.6	0.4	"""
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
         #----------------------------------------------------------------------
-        #-------=====================================================----------
-        #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+        #-------0====================================================----------
         # Regions:
-        #-====------======----=====----=====----======----=====----=====---===-
+        #-0===------1=====----2====----3====----4=====----5====----6====---7==-
         # Overlap:
         #           ======    =====    =====    ======    =====    ==
 
@@ -358,15 +362,24 @@ chr1	50	54	R6	4.6	1	4.6	0.3	0.5	0.2
 chr1	59	63	R7	-4.1	1	-4.1	-0.2	0.2	0.5	
 chr1	67	69	R8	4.0	1	4.0	0.2	0.6	0.4	"""
 
-        import StringIO
         gene_fp = StringIO.StringIO(gene_file)
         gene_list = create_gene_list(gene_fp)
 
         region_fp = StringIO.StringIO(region_file)
         region_list = create_region_list(region_fp)
 
-        find_features(region_list, gene_list=gene_list)
+        true_found = {region_list[0]:[],
+                      region_list[1]:[gene_list[0]],
+                      region_list[2]:[gene_list[0]],
+                      region_list[3]:[gene_list[0]],
+                      region_list[4]:[gene_list[0]],
+                      region_list[5]:[gene_list[0]],
+                      region_list[6]:[gene_list[0]],
+                      region_list[7]:[]}
 
+        code_found = find_features(region_list, gene_list=gene_list)
+
+        self.assertEquals(code_found, true_found)
 
     def test_find_features_big_reg(self):
 
@@ -375,11 +388,10 @@ chr1	67	69	R8	4.0	1	4.0	0.2	0.6	0.4	"""
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
-        #-====------======----=====----=====----======----=====----=====---===-
+        #-0===------1=====----2====----3====----4=====----5====----6====---7==-
         #----------------------------------------------------------------------
-        #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Regions:
-        #-------=====================================================----------
+        #-------0====================================================----------
         # Overlap:
         #           ======    =====    =====    ======    =====    ==
 
@@ -400,15 +412,17 @@ track name="boygirl_12"
 #Chromosome	StartPosition	EndPosition	RegionName	Score	nProbes	maxMinZvalue	maxPropDiff	avgTreatP	avgConP	
 chr1	8	60	R1	-4.0	1	-4.0	-0.2	0.0	0.3	"""
 
-        import StringIO
         gene_fp = StringIO.StringIO(gene_file)
         gene_list = create_gene_list(gene_fp)
 
         region_fp = StringIO.StringIO(region_file)
         region_list = create_region_list(region_fp)
 
-        find_features(region_list, gene_list=gene_list)
+        true_found = {region_list[0]:gene_list[1:7]}
 
+        code_found = find_features(region_list, gene_list=gene_list)
+
+        self.assertEquals(code_found, true_found)
 
     def test_find_features_big_reg_neg(self):
 
@@ -418,10 +432,9 @@ chr1	8	60	R1	-4.0	1	-4.0	-0.2	0.0	0.3	"""
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
         #----------------------------------------------------------------------
-        #-====------======----=====----=====----======----=====----=====---===-
-        #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+        #-0===------1=====----2====----3====----4=====----5====----6====---7==-
         # Regions:
-        #-------=====================================================----------
+        #-------0====================================================----------
         # Overlap:
         #           ======    =====    =====    ======    =====    ==
 
@@ -449,39 +462,58 @@ chr1	8	60	R1	-4.0	1	-4.0	-0.2	0.0	0.3	"""
         region_fp = StringIO.StringIO(region_file)
         region_list = create_region_list(region_fp)
 
-        find_features(region_list, gene_list=gene_list)
+        true_found = {region_list[0]:gene_list[1:7]}
 
+        code_found = find_features(region_list, gene_list=gene_list)
 
-        """def test_find_features_no_overlap(self):
+        self.assertEquals(code_found, true_found)
+
+    def test_find_features_no_overlap(self):
 
 
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
-        #----=====-----=====-----=====-----=====-----=====-----=====-----=====-
+        #----0====-----1====-----2====-----3====-----4====-----5====-----6====-
         #----------------------------------------------------------------------
         # Regions:
-        #==---------===-------==-------====-------===-----=====-------==------
+        #0=---------1==-------2=-------3===-------4==-----5====-------6=------
         # Overlap:
         #
 
-        gene_list = [ Gene(1, '+',  5,  9, 1,  5,  9, 'G1', 'G1'),
-                      Gene(1, '+', 15, 19, 1, 15, 19, 'G2', 'G2'),
-                      Gene(1, '+', 25, 29, 1, 25, 29, 'G3', 'G3'),
-                      Gene(1, '+', 35, 39, 1, 35, 39, 'G4', 'G4'),
-                      Gene(1, '+', 45, 49, 1, 45, 49, 'G5', 'G5'),
-                      Gene(1, '+', 55, 59, 1, 55, 59, 'G6', 'G6'),
-                      Gene(1, '+', 65, 69, 1, 65, 69, 'G7', 'G7') ]
+        gene_file = \
+"""#chrom	strand	txStart	txEnd	exonCount	exonStarts	exonEnds	geneSymbol	refseq
+chr1	+	5	9	1	5,	9,	G1,	G1,
+chr1	+	15	19	1	15,	19,	G2,	G2,
+chr1	+	25	29	1	25,	29,	G3,	G3,
+chr1	+	35	39	1	35,	39,	G4,	G4,
+chr1	+	45	49	1	45,	49,	G5,	G5,
+chr1	+	55	59	1	55,	59,	G6,	G6,
+chr1	+	65	69	1	65,	69,	G7,	G7,"""
 
-        region_list = [ Region(1,  1,  2, 'R1', 'R1'),
-                        Region(1, 12, 14, 'R2', 'R2'),
-                        Region(1, 22, 23, 'R3', 'R3'),
-                        Region(1, 31, 34, 'R4', 'R4'),
-                        Region(1, 42, 44, 'R5', 'R5'),
-                        Region(1, 50, 54, 'R6', 'R6'),
-                        Region(1, 62, 63, 'R7', 'R7') ]
+        region_file = \
+"""browser position chr1:26339-26399
+track name="boygirl_12"
+#Chromosome	StartPosition	EndPosition	RegionName	Score	nProbes	maxMinZvalue	maxPropDiff	avgTreatP	avgConP	
+chr1	1	2	R1	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	12	14	R2	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	22	23	R3	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	31	34	R4	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	42	44	R5	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	50	54	R6	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	62	63	R7	-4.0	1	-4.0	-0.2	0.0	0.3	"""
 
-        find_features(region_list, gene_list=gene_list)
+        gene_fp = StringIO.StringIO(gene_file)
+        gene_list = create_gene_list(gene_fp)
+
+        region_fp = StringIO.StringIO(region_file)
+        region_list = create_region_list(region_fp)
+
+        true_found = {region:[] for region in region_list}
+
+        code_found = find_features(region_list, gene_list=gene_list)
+
+        self.assertEquals(code_found, true_found)
 
     def test_find_features_some_overlap(self):
 
@@ -489,30 +521,48 @@ chr1	8	60	R1	-4.0	1	-4.0	-0.2	0.0	0.3	"""
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
         # Genes:
-        #----======------================----=========--===----------=======---
+        #----0=====------1===============----2========--3==----------4======---
         #----------------------------------------------------------------------
         # Regions:
-        #======-----===-----=====----------===================-----============
+        #0=====-----1==-----2====----------3==================-----4===========
         # Overlap:
         #    ==             =====            =========  ===          =======
 
-        gene_list = [ Gene(1, '+',  5, 10, 1,  5, 10, 'G1', 'G1'),
-                      Gene(1, '+', 17, 32, 1, 17, 32, 'G2', 'G2'),
-                      Gene(1, '+', 37, 45, 1, 37, 45, 'G3', 'G3'),
-                      Gene(1, '+', 48, 50, 1, 48, 50, 'G4', 'G4'),
-                      Gene(1, '+', 61, 67, 1, 61, 67, 'G5', 'G5') ]
+        gene_file = \
+"""#chrom	strand	txStart	txEnd	exonCount	exonStarts	exonEnds	geneSymbol	refseq
+chr1	+	5	10	1	5,	10,	G1,	G1,
+chr1	+	17	32	1	17,	32,	G2,	G2,
+chr1	+	37	45	1	37,	45,	G3,	G3,
+chr1	+	48	50	1	48,	50,	G4,	G4,
+chr1	+	61	67	1	61,	67,	G5,	G5,"""
 
-        region_list = [ Region(1,  1,  2, 'R1', 'R1'),
-                        Region(1, 12, 14, 'R2', 'R2'),
-                        Region(1, 22, 23, 'R3', 'R3'),
-                        Region(1, 31, 34, 'R4', 'R4'),
-                        Region(1, 42, 44, 'R5', 'R5'),
-                        Region(1, 50, 54, 'R6', 'R6'),
-                        Region(1, 62, 63, 'R7', 'R7') ]
+        region_file = \
+"""browser position chr1:26339-26399
+track name="boygirl_12"
+#Chromosome	StartPosition	EndPosition	RegionName	Score	nProbes	maxMinZvalue	maxPropDiff	avgTreatP	avgConP	
+chr1	1	6	R1	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	12	14	R2	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	20	24	R3	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	35	53	R4	-4.0	1	-4.0	-0.2	0.0	0.3	
+chr1	59	70	R5	-4.0	1	-4.0	-0.2	0.0	0.3	"""
 
-        find_features(self.region_list, gene_list=self.gene_list)
+        gene_fp = StringIO.StringIO(gene_file)
+        gene_list = create_gene_list(gene_fp)
 
-    def test_find_features_realistic_genes(self):
+        region_fp = StringIO.StringIO(region_file)
+        region_list = create_region_list(region_fp)
+
+        true_found = {region_list[0]:[gene_list[0]],
+                      region_list[1]:[],
+                      region_list[2]:[gene_list[1]],
+                      region_list[3]:[gene_list[2], gene_list[3]],
+                      region_list[4]:[gene_list[4]]}
+
+        code_found = find_features(region_list, gene_list=gene_list)
+
+        self.assertEquals(code_found, true_found)
+
+        """def test_find_features_realistic_genes(self):
 
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
@@ -576,12 +626,6 @@ chr1	-	4511	4773	3	4511,4689,4705,	4555,4696,4773,	n/a_1	n/a
 chr1	-	4516	4755	4	4516,4689,4705,4740,	4555,4696,4723,4755,	n/a	n/a
 chr1	-	4511	4773	2	4511,4625,	    4536,4773,	n/a_2	n/a
 chr1	-	5521	5998	2	5521,5889,	57068,5998,	ENSA,	NM_207168,"""
-
-        import StringIO
-
-        gene_fp = StringIO.StringIO(fake_file)
-
-        self.gene_list = create_gene_list(gene_fp)
 
 
 if __name__ == '__main__':
