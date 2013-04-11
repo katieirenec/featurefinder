@@ -2,10 +2,30 @@
 #
 # Developed on Python 2.7.3
 # By: Katie Cunningham
-# Last Updated: March 31, 2013
+# Last Updated: April 11, 2013
 
 
 from operator import attrgetter
+from collections import defaultdict
+
+# Class structure:
+#
+#                   ----------
+#                   |Interval|
+#                   ----------
+#           ((chrom, left, right, name))
+#                       |
+#                  -----------
+#                  |          |
+#              --------   ---------
+#              |Region|   |Feature|
+#              --------   ---------
+#                             |
+#                       --------------
+#                       |            |
+#                     ------
+#                     |Gene|
+#                     ------
 
 
 class Interval(object):
@@ -16,6 +36,13 @@ class Interval(object):
         self.left = left
         self.right = right
         self.name = name
+
+    def __str__(self):
+        return "{} {} @ {} ({},{})".format(type(self).__name__, self.name,
+                                            self.chrom, self.left, self.right)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Region(Interval):
@@ -72,13 +99,12 @@ class Gene(Feature):
 
 
 def sort_intervals(intervals_list):
-    """Sort first by chrom (a str), then by left (an int)"""
+    """Sort first by chrom (a str), then by left (an int), then by right
+    (an int)
+
+    """
+
     intervals_list.sort(key=attrgetter('chrom', 'left', 'right'))
-
-def print_interval(i):
-
-    print type(i), i.name, '\t', i.chrom, '(', i.left, ',', i.right, ')'
-
 
 def create_gene_list(gene_fp):
     """
@@ -287,29 +313,56 @@ def print_overlap_info(feature, region):
                                                    feature.name,
                                                    get_overlap(region,
                                                                feature))
-# This needs work!!!!! And testing!!!!!
+
 def find_features(region_list, gene_list=None):
     """Returns a list of the features found"""
 
-    found = []
+    found = {region : [] for region in region_list}
 
     if gene_list is None:
 
-        print "No gene list given"
+        #print "No gene list given"
         return
 
     gene_index = 0
 
-    for region in region_list:
+    # For each region
+    for region_index in xrange(len(region_list)):
 
-        print 'region: ', region.name
+        cur_region = region_list[region_index]
+        print 'cur_region:', cur_region.name
+        cur_gene = gene_list[gene_index]
+        print 'cur_gene:', cur_gene.name
 
+        # Advance features until feature overlaps or is after current region
         while ((gene_index < len(gene_list)) and
-              not after(gene_list[gene_index], region)):
-            print '--> gene_index: ', gene_index
-            print_overlap_info(region, gene_list[gene_index])
+               before(cur_gene, cur_region)):
+            print 'skipping:', cur_gene.name
             gene_index += 1
+            if gene_index >= len(gene_list):
+                break
+            else:
+                cur_gene = gene_list[gene_index]
 
+        # Advance features and add them to that regions' entry in the dict
+        while overlaps(cur_gene, cur_region):
+
+            print 'adding:', cur_gene.name
+            print_overlap_info(cur_region, cur_gene)
+            found[cur_region].append(cur_gene)
+
+            if cur_gene.right > cur_region.right:  # Don't move ahead when gene
+                break                              # may overlap next region
+            else:
+                gene_index += 1
+                if gene_index >= len(gene_list):
+                    gene_index -= 1
+                    break
+                else:
+                    cur_gene = gene_list[gene_index]
+
+
+    return found
 
 """
 GENE_FILENAME = 'gene_file'
