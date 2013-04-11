@@ -470,6 +470,7 @@ chr1	8	60	R1	-4.0	1	-4.0	-0.2	0.0	0.3	"""
 
     def test_find_features_no_overlap(self):
 
+        print "\n*In test_find_features_no_overlap"
 
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
@@ -517,6 +518,7 @@ chr1	62	63	R7	-4.0	1	-4.0	-0.2	0.0	0.3	"""
 
     def test_find_features_some_overlap(self):
 
+        print "\n*In test_find_features_some_overlap"
 
         #    5    10   15   20   25   30   35   40   45   50   55   60   65  70
         #----|----|----|----|----|----|----|----|----|----|----|----|----|----|
